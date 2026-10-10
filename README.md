@@ -1,168 +1,152 @@
-# REST API Layanan Pencatatan Peminjaman Buku Perpustakaan 📚
+# Responsi Modul 1 - REST API Layanan Peminjaman Buku Perpustakaan
 
-> **Responsi Praktikum Pemrograman Berbasis Platform (PPB) - Modul 1**  
-> Dibuat menggunakan **Node.js**, **Express.js**, dan **Supabase (PostgreSQL)**, serta siap di-deploy ke **Vercel**.
+Repository ini berisi pengerjaan tugas responsi Praktikum Pemrograman Berbasis Platform (PPB) Modul 1. Proyek ini mengimplementasikan RESTful API untuk layanan pencatatan transaksi peminjaman buku perpustakaan menggunakan stack Node.js, Express.js, dan database Supabase (PostgreSQL), serta dikonfigurasi untuk deployment ke Vercel.
 
----
-
-## 📌 1. Deskripsi Umum & Tujuan Proyek
-
-Proyek ini merupakan implementasi backend RESTful API untuk layanan sistem informasi perpustakaan, khususnya pengelolaan dan pencatatan transaksi peminjaman buku oleh anggota perpustakaan.
-
-### 🎯 Tujuan Proyek
-1. Mengimplementasikan arsitektur RESTful API standar dengan metode HTTP (`GET`, `POST`, `PUT`, `DELETE`).
-2. Mengelola transaksi data peminjaman buku oleh anggota perpustakaan dengan operasi **CRUD lengkap**.
-3. Menyediakan fitur **filter query string**, seperti penyaringan peminjaman berdasarkan status (`GET /api/loans?status=Terlambat`).
-4. Mengintegrasikan aplikasi backend dengan **Database Supabase** sebagai *Backend-as-a-Service* (BaaS).
-5. Menerapkan arsitektur kode terstruktur (*Separation of Concerns*) berbasis pola **MVC (Model-Controller-Route)**.
-6. Menyiapkan konfigurasi serverless deployment ke **Vercel** agar API dapat diakses secara publik.
+- **Repository GitHub:** [https://github.com/abipemula/ResponsiM1-Prak-PPB](https://github.com/abipemula/ResponsiM1-Prak-PPB)
+- **Deployment URL (Vercel):** `https://responsi-m1-prak-ppb.vercel.app` *(update tautan ini setelah proses deploy selesai)*
 
 ---
 
-## 🚀 2. Tautan Hasil Deployment Vercel
+## 1. Deskripsi & Tujuan Proyek
 
-* **Production URL (Vercel):** `https://responsi-m1-library-api.vercel.app` *(Silakan perbarui tautan ini setelah menghubungkan repositori ke akun Vercel Anda)*
-* **Base URL Lokal:** `http://localhost:3000`
+Tujuan dari proyek ini adalah membangun backend service sederhana yang mencatat siklus peminjaman buku oleh anggota perpustakaan. API ini mengelola data anggota (*members*), katalog buku (*books*), dan transaksi peminjaman (*loans*), dengan pemisahan struktur kode menggunakan arsitektur MVC-like (Config, Model, Controller, Router).
+
+### Fitur Utama & Perbedaan Dibanding Latihan Modul 1
+
+Pada latihan terbimbing Modul 1, studi kasus yang dikerjakan adalah **Sales API** (`categories`, `customers`, `products`) dengan operasi CRUD standar. Untuk memenuhi ketentuan tugas responsi, dilakukan beberapa perubahan dan penambahan fitur:
+
+| Aspek | Latihan Modul 1 (Sales API) | Tugas Responsi (Library Loan API) |
+| :--- | :--- | :--- |
+| **Domain Kasus** | Penjualan produk e-commerce | Layanan peminjaman buku perpustakaan |
+| **Entitas Data** | `categories`, `customers`, `products` | `members` (anggota), `books` (buku), `loans` (transaksi peminjaman) |
+| **Filter Query** | Tidak ada (hanya `select("*")` semua data) | **Ditambahkan fitur filter query status**, misalnya `GET /api/loans?status=Terlambat`, `Dipinjam`, atau `Dikembalikan` |
+| **Relational Query** | Query relasi dasar pada detail produk | Relasi bertingkat pada transaksi peminjaman yang menggabungkan informasi peminjam (`members`) dan buku (`books`) secara otomatis |
+| **Logika Bisnis** | Pencatatan master data biasa | Pencatatan transaksi dengan tanggal pinjam, batas waktu kembali (*due date*), tanggal riil kembali, status keterlambatan, dan catatan/denda |
+| **Deployment** | Panduan deploy dasar ke Vercel | Konfigurasi serverless production-ready via `vercel.json` dan routing alias |
 
 ---
 
-## 🛠️ 3. Tech Stack
+## 2. Struktur Data & Skema Database
 
-* **Runtime Environment:** [Node.js](https://nodejs.org/) (ES Modules)
-* **Framework Backend:** [Express.js](https://expressjs.com/)
-* **Database & BaaS:** [Supabase](https://supabase.com/) (PostgreSQL)
-* **Deployment Platform:** [Vercel](https://vercel.com/)
-* **API Testing:** [Postman](https://www.postman.com/)
+Database menggunakan PostgreSQL yang di-host di Supabase. Skema lengkap dapat dilihat pada file [`supabase_schema.sql`](supabase_schema.sql).
+
+### Relasi Tabel
+- Satu anggota (`members`) dapat memiliki banyak transaksi peminjaman (`loans`).
+- Satu buku (`books`) dapat dipinjam di banyak transaksi peminjaman (`loans`).
+
+### Rincian Kolom
+
+#### A. Tabel `members`
+Menyimpan data anggota perpustakaan:
+- `id` (UUID, Primary Key, default: `gen_random_uuid()`)
+- `member_code` (TEXT, Unique, Not Null) - contoh: `MBR-001`
+- `name` (TEXT, Not Null)
+- `email` (TEXT, Unique, Not Null)
+- `phone` (TEXT)
+- `address` (TEXT)
+- `created_at` (TIMESTAMPTZ, default: `now()`)
+
+#### B. Tabel `books`
+Menyimpan katalog buku perpustakaan:
+- `id` (UUID, Primary Key, default: `gen_random_uuid()`)
+- `isbn` (TEXT, Unique, Not Null) - contoh: `978-602-03-8599-0`
+- `title` (TEXT, Not Null)
+- `author` (TEXT, Not Null)
+- `publisher` (TEXT)
+- `year` (INTEGER)
+- `stock` (INTEGER, default: `1`)
+- `created_at` (TIMESTAMPTZ, default: `now()`)
+
+#### C. Tabel `loans`
+Menyimpan transaksi peminjaman buku:
+- `id` (UUID, Primary Key, default: `gen_random_uuid()`)
+- `loan_code` (TEXT, Unique, Not Null) - contoh: `LOAN-2026-001`
+- `member_id` (UUID, FK -> `members.id`, ON DELETE CASCADE)
+- `book_id` (UUID, FK -> `books.id`, ON DELETE CASCADE)
+- `loan_date` (DATE, default: `CURRENT_DATE`)
+- `due_date` (DATE, Not Null)
+- `return_date` (DATE, Nullable)
+- `status` (TEXT, Not Null, CHECK: `'Dipinjam'`, `'Dikembalikan'`, `'Terlambat'`)
+- `notes` (TEXT)
+- `created_at` (TIMESTAMPTZ, default: `now()`)
 
 ---
 
-## 📁 4. Struktur Direktori Proyek
+## 3. Struktur Direktori
+
+Kode aplikasi disusun dengan memisahkan fungsi model, controller, dan router agar rapi dan mudah dirawat:
 
 ```plaintext
 ResponsiM1/
 ├── src/
 │   ├── config/
-│   │   └── supabaseClient.js      # Inisialisasi koneksi client Supabase
+│   │   └── supabaseClient.js       # Inisialisasi koneksi Supabase
 │   ├── controllers/
-│   │   ├── bookController.js      # Logika HTTP request/response data buku
-│   │   ├── loanController.js      # Logika HTTP request/response data peminjaman & filter
-│   │   └── memberController.js    # Logika HTTP request/response data anggota
+│   │   ├── bookController.js       # Logika request/response data buku
+│   │   ├── loanController.js       # Logika request/response transaksi peminjaman & filter
+│   │   └── memberController.js     # Logika request/response data anggota
 │   ├── models/
-│   │   ├── bookModel.js           # Query database tabel 'books'
-│   │   ├── loanModel.js           # Query database tabel 'loans' (CRUD & filtering)
-│   │   └── memberModel.js         # Query database tabel 'members'
+│   │   ├── bookModel.js            # Interaksi tabel 'books'
+│   │   ├── loanModel.js            # Interaksi tabel 'loans' (CRUD & query filter)
+│   │   └── memberModel.js          # Interaksi tabel 'members'
 │   ├── routes/
-│   │   ├── bookRoutes.js          # Routing endpoint /api/books
-│   │   ├── loanRoutes.js          # Routing endpoint /api/loans
-│   │   └── memberRoutes.js        # Routing endpoint /api/members
-│   └── index.js                   # Server utama Express & konfigurasi middleware
-├── .env.example                   # Template variabel lingkungan
-├── .gitignore                     # Daftar file/folder yang diabaikan Git
-├── package.json                   # Definisi paket, dependensi & script NPM
-├── PPB_API_Postman_Collection.json # Koleksi Postman siap pakai
-├── PPB_API_Postman_Environment.json# Environment variabel Postman
-├── supabase_schema.sql            # Script SQL skema tabel dan seed data
-├── vercel.json                    # Konfigurasi deployment serverless Vercel
-└── README.md                      # Dokumentasi lengkap proyek
+│   │   ├── bookRoutes.js           # Route untuk /api/books
+│   │   ├── loanRoutes.js           # Route untuk /api/loans
+│   │   └── memberRoutes.js         # Route untuk /api/members
+│   └── index.js                    # Inisialisasi Express & konfigurasi serverless
+├── .env.example                    # Template variabel lingkungan
+├── package.json                    # Dependensi dan script
+├── PPB_API_Postman_Collection.json # File koleksi testing Postman
+├── PPB_API_Postman_Environment.json# File environment Postman
+├── supabase_schema.sql             # Script SQL DDL & seed data
+├── vercel.json                     # Konfigurasi build Vercel
+└── README.md                       # Dokumentasi proyek
 ```
 
 ---
 
-## 🗄️ 5. Struktur Data & Skema Database (Supabase)
+## 4. Daftar Endpoint API
 
-Sistem menggunakan 3 tabel relasional di Supabase:
-1. **`members`**: Menyimpan identitas anggota perpustakaan.
-2. **`books`**: Menyimpan katalog buku yang tersedia untuk dipinjam.
-3. **`loans`**: Menyimpan riwayat transaksi peminjaman buku oleh anggota perpustakaan, terhubung melalui *Foreign Key* ke tabel `members` dan `books`.
-
-### Relasi Antar Tabel
-```
-members (id) <--- [1:N] --- loans (member_id)
-books (id)   <--- [1:N] --- loans (book_id)
-```
-
-### Kamus Data / Schema Detail
-
-#### A. Tabel `members` (Anggota)
-| Kolom | Tipe Data | Keterangan |
+### Peminjaman (`/api/loans`)
+| Method | Endpoint | Keterangan |
 | :--- | :--- | :--- |
-| `id` | `UUID` (Primary Key) | Auto-generated UUID default `gen_random_uuid()` |
-| `member_code` | `TEXT` (Unique, Not Null) | Kode anggota (contoh: `MBR-001`) |
-| `name` | `TEXT` (Not Null) | Nama lengkap anggota |
-| `email` | `TEXT` (Unique, Not Null) | Alamat email anggota |
-| `phone` | `TEXT` | Nomor telepon/WhatsApp |
-| `address` | `TEXT` | Alamat domisili |
-| `created_at` | `TIMESTAMPTZ` | Waktu pencatatan akun anggota |
+| **GET** | `/api/loans` | Mendapatkan semua data peminjaman beserta relasi data anggota dan buku |
+| **GET** | `/api/loans?status=Terlambat` | **Filter query** status peminjaman (`Terlambat`, `Dipinjam`, atau `Dikembalikan`) |
+| **GET** | `/api/loans/:id` | Mendapatkan detail 1 peminjaman berdasarkan ID |
+| **POST** | `/api/loans` | Menambahkan data peminjaman baru |
+| **PUT** | `/api/loans/:id` | Memperbarui data peminjaman (pengembalian / status) |
+| **DELETE** | `/api/loans/:id` | Menghapus data peminjaman berdasarkan ID |
 
-#### B. Tabel `books` (Buku)
-| Kolom | Tipe Data | Keterangan |
+### Master Buku (`/api/books`)
+| Method | Endpoint | Keterangan |
 | :--- | :--- | :--- |
-| `id` | `UUID` (Primary Key) | Auto-generated UUID default `gen_random_uuid()` |
-| `isbn` | `TEXT` (Unique, Not Null) | Nomor ISBN buku (contoh: `978-602-03-8599-0`) |
-| `title` | `TEXT` (Not Null) | Judul buku |
-| `author` | `TEXT` (Not Null) | Nama penulis buku |
-| `publisher` | `TEXT` | Nama penerbit |
-| `year` | `INTEGER` | Tahun terbit buku |
-| `stock` | `INTEGER` | Jumlah stok buku tersedia (default: `1`) |
-| `created_at` | `TIMESTAMPTZ` | Waktu penambahan buku ke sistem |
-
-#### C. Tabel `loans` (Peminjaman)
-| Kolom | Tipe Data | Keterangan |
-| :--- | :--- | :--- |
-| `id` | `UUID` (Primary Key) | Auto-generated UUID default `gen_random_uuid()` |
-| `loan_code` | `TEXT` (Unique, Not Null) | Nomor transaksi peminjaman (contoh: `LOAN-2026-001`) |
-| `member_id` | `UUID` (Foreign Key, Not Null) | Relasi ke `members.id` (`ON DELETE CASCADE`) |
-| `book_id` | `UUID` (Foreign Key, Not Null) | Relasi ke `books.id` (`ON DELETE CASCADE`) |
-| `loan_date` | `DATE` (Not Null) | Tanggal mulai peminjaman (default: `CURRENT_DATE`) |
-| `due_date` | `DATE` (Not Null) | Batas waktu pengembalian buku |
-| `return_date` | `DATE` | Tanggal riil pengembalian (null jika masih dipinjam) |
-| `status` | `TEXT` (Not Null) | Status peminjaman: `'Dipinjam'`, `'Dikembalikan'`, `'Terlambat'` |
-| `notes` | `TEXT` | Catatan tambahan kondisi buku atau denda |
-| `created_at` | `TIMESTAMPTZ` | Waktu pembuatan transaksi peminjaman |
-
----
-
-## 📡 6. Daftar Endpoint API
-
-### A. Endpoint Peminjaman (Loans) — *Fitur Utama Responsi*
-| Method | Endpoint | Query Parameter | Deskripsi |
-| :--- | :--- | :--- | :--- |
-| **GET** | `/api/loans` | *(opsional)* `?status=...` | Mengambil seluruh data peminjaman buku (beserta data relasi member & book). Mendukung filter query: `?status=Terlambat`, `?status=Dipinjam`, `?status=Dikembalikan`. |
-| **GET** | `/api/loans/:id` | - | Mengambil detail 1 transaksi peminjaman buku berdasarkan ID. |
-| **POST** | `/api/loans` | - | Menambahkan catatan transaksi peminjaman buku baru. |
-| **PUT** | `/api/loans/:id` | - | Memperbarui data peminjaman (misal: pengembalian buku, ubah status, isi catatan). |
-| **DELETE** | `/api/loans/:id` | - | Menghapus data transaksi peminjaman buku berdasarkan ID. |
-
-*(Tersedia pula alias tanpa prefix `/api/`, misalnya `GET /loans?status=Terlambat`).*
-
-### B. Endpoint Buku (Books)
-| Method | Endpoint | Deskripsi |
-| :--- | :--- | :--- |
-| **GET** | `/api/books` | Mengambil daftar seluruh buku |
-| **GET** | `/api/books/:id` | Mengambil data 1 buku berdasarkan ID |
-| **POST** | `/api/books` | Menambahkan buku baru ke katalog |
-| **PUT** | `/api/books/:id` | Memperbarui data buku |
+| **GET** | `/api/books` | Mengambil semua buku |
+| **GET** | `/api/books/:id` | Mengambil buku berdasarkan ID |
+| **POST** | `/api/books` | Menambah data buku |
+| **PUT** | `/api/books/:id` | Mengupdate data buku |
 | **DELETE** | `/api/books/:id` | Menghapus data buku |
 
-### C. Endpoint Anggota (Members)
-| Method | Endpoint | Deskripsi |
+### Master Anggota (`/api/members`)
+| Method | Endpoint | Keterangan |
 | :--- | :--- | :--- |
-| **GET** | `/api/members` | Mengambil daftar seluruh anggota perpustakaan |
-| **GET** | `/api/members/:id` | Mengambil data 1 anggota berdasarkan ID |
-| **POST** | `/api/members` | Mendaftarkan anggota baru |
-| **PUT** | `/api/members/:id` | Memperbarui data profil anggota |
+| **GET** | `/api/members` | Mengambil semua anggota |
+| **GET** | `/api/members/:id` | Mengambil anggota berdasarkan ID |
+| **POST** | `/api/members` | Menambah data anggota |
+| **PUT** | `/api/members/:id` | Mengupdate data anggota |
 | **DELETE** | `/api/members/:id` | Menghapus data anggota |
 
 ---
 
-## 📬 7. Contoh Request dan Response
+## 5. Contoh Request dan Response
 
-### 1. Menampilkan Semua Peminjaman dengan Filter Query Status (`GET /api/loans?status=Terlambat`)
-* **Method:** `GET`
-* **URL:** `http://localhost:3000/api/loans?status=Terlambat`
-* **Headers:** `Content-Type: application/json`
-* **Response Status:** `200 OK`
-* **Response Body:**
+### A. Filter Peminjaman Berdasarkan Status (`GET /api/loans?status=Terlambat`)
+**Request:**
+```http
+GET /api/loans?status=Terlambat HTTP/1.1
+Host: localhost:3000
+```
+
+**Response (200 OK):**
 ```json
 [
   {
@@ -196,12 +180,13 @@ books (id)   <--- [1:N] --- loans (book_id)
 
 ---
 
-### 2. Membuat Catatan Peminjaman Buku Baru (`POST /api/loans`)
-* **Method:** `POST`
-* **URL:** `http://localhost:3000/api/loans`
-* **Headers:** `Content-Type: application/json`
-* **Request Body:**
-```json
+### B. Tambah Data Peminjaman Baru (`POST /api/loans`)
+**Request:**
+```http
+POST /api/loans HTTP/1.1
+Host: localhost:3000
+Content-Type: application/json
+
 {
   "member_id": "a0000001-0000-0000-0000-000000000001",
   "book_id": "b0000001-0000-0000-0000-000000000004",
@@ -211,8 +196,8 @@ books (id)   <--- [1:N] --- loans (book_id)
   "notes": "Peminjaman buku Filosofi Teras untuk tugas kuliah"
 }
 ```
-* **Response Status:** `201 Created`
-* **Response Body:**
+
+**Response (201 Created):**
 ```json
 {
   "id": "5fa23d10-8b1e-450b-8526-9d3e8e19b88a",
@@ -240,59 +225,21 @@ books (id)   <--- [1:N] --- loans (book_id)
 
 ---
 
-### 3. Mengambil Detail Peminjaman Berdasarkan ID (`GET /api/loans/:id`)
-* **Method:** `GET`
-* **URL:** `http://localhost:3000/api/loans/c0000001-0000-0000-0000-000000000002`
-* **Response Status:** `200 OK`
-* **Response Body:**
-```json
-{
-  "id": "c0000001-0000-0000-0000-000000000002",
-  "loan_code": "LOAN-2026-002",
-  "member_id": "a0000001-0000-0000-0000-000000000002",
-  "book_id": "b0000001-0000-0000-0000-000000000002",
-  "loan_date": "2026-03-10",
-  "due_date": "2026-03-17",
-  "return_date": null,
-  "status": "Dipinjam",
-  "notes": "Peminjaman reguler",
-  "created_at": "2026-10-10T09:11:15.000Z",
-  "members": {
-    "id": "a0000001-0000-0000-0000-000000000002",
-    "member_code": "MBR-002",
-    "name": "Siti Nurhaliza",
-    "email": "siti.nurhaliza@example.com",
-    "phone": "082198765432",
-    "address": "Jl. Gejayan No. 12, Yogyakarta"
-  },
-  "books": {
-    "id": "b0000001-0000-0000-0000-000000000002",
-    "isbn": "978-602-04-1234-5",
-    "title": "Laskar Pelangi",
-    "author": "Andrea Hirata",
-    "publisher": "Bentang Pustaka",
-    "year": 2005,
-    "stock": 3
-  }
-}
-```
+### C. Update Status / Pengembalian Buku (`PUT /api/loans/:id`)
+**Request:**
+```http
+PUT /api/loans/c0000001-0000-0000-0000-000000000002 HTTP/1.1
+Host: localhost:3000
+Content-Type: application/json
 
----
-
-### 4. Memperbarui Peminjaman / Pengembalian Buku (`PUT /api/loans/:id`)
-* **Method:** `PUT`
-* **URL:** `http://localhost:3000/api/loans/c0000001-0000-0000-0000-000000000002`
-* **Headers:** `Content-Type: application/json`
-* **Request Body:**
-```json
 {
   "status": "Dikembalikan",
   "return_date": "2026-03-16",
-  "notes": "Buku dikembalikan tepat waktu dalam kondisi sangat baik"
+  "notes": "Buku telah dikembalikan dalam kondisi baik"
 }
 ```
-* **Response Status:** `200 OK`
-* **Response Body:**
+
+**Response (200 OK):**
 ```json
 {
   "id": "c0000001-0000-0000-0000-000000000002",
@@ -303,7 +250,7 @@ books (id)   <--- [1:N] --- loans (book_id)
   "due_date": "2026-03-17",
   "return_date": "2026-03-16",
   "status": "Dikembalikan",
-  "notes": "Buku dikembalikan tepat waktu dalam kondisi sangat baik",
+  "notes": "Buku telah dikembalikan dalam kondisi baik",
   "created_at": "2026-10-10T09:11:15.000Z",
   "members": {
     "id": "a0000001-0000-0000-0000-000000000002",
@@ -320,11 +267,14 @@ books (id)   <--- [1:N] --- loans (book_id)
 
 ---
 
-### 5. Menghapus Data Peminjaman (`DELETE /api/loans/:id`)
-* **Method:** `DELETE`
-* **URL:** `http://localhost:3000/api/loans/c0000001-0000-0000-0000-000000000001`
-* **Response Status:** `200 OK`
-* **Response Body:**
+### D. Hapus Data Peminjaman (`DELETE /api/loans/:id`)
+**Request:**
+```http
+DELETE /api/loans/c0000001-0000-0000-0000-000000000001 HTTP/1.1
+Host: localhost:3000
+```
+
+**Response (200 OK):**
 ```json
 {
   "message": "Data peminjaman buku berhasil dihapus"
@@ -333,112 +283,70 @@ books (id)   <--- [1:N] --- loans (book_id)
 
 ---
 
-## 💻 8. Panduan Instalasi & Cara Menjalankan Lokal
+## 6. Panduan Menjalankan Secara Lokal
 
-### Prasyarat Sistem
-* [Node.js](https://nodejs.org/) versi 18 atau lebih baru.
-* Akun aktif di [Supabase](https://supabase.com/).
+### Prasyarat
+- Node.js (versi 18+)
+- Akun Supabase
 
-### Langkah 1: Kloning / Buka Direktori Proyek
-Buka terminal dan arahkan ke direktori proyek:
-```bash
-cd d:\PPB\ResponsiM1
-```
-
-### Langkah 2: Instalasi Dependensi
-Jalankan perintah berikut:
-```bash
-npm install
-```
-
-### Langkah 3: Setup Database di Supabase
-1. Masuk ke [Supabase Dashboard](https://supabase.com/dashboard).
-2. Buat proyek baru (misalnya dengan nama `Library-API` atau `PPB-Responsi`).
-3. Buka menu **SQL Editor** (ikon `>_` di sidebar kiri).
-4. Klik **+ New query**, lalu salin seluruh isi file [`supabase_schema.sql`](supabase_schema.sql) ke editor.
-5. Klik tombol **RUN**. Seluruh tabel (`members`, `books`, `loans`) dan data awal (*seed data*) akan otomatis terbentuk.
-6. Periksa hasilnya melalui menu **Table Editor** untuk memastikan tabel dan relasi sudah aktif.
-
-### Langkah 4: Konfigurasi Variabel Lingkungan (`.env`)
-1. Di dashboard Supabase, buka menu **Project Settings** -> **Data API** (atau **API**).
-2. Salin nilai **Project URL** dan **Project API Keys (`anon public`)**.
-3. Buat atau perbarui file `.env` di root direktori proyek:
-```env
-PORT=3000
-SUPABASE_URL=https://<your-project-id>.supabase.co
-SUPABASE_KEY=<your-anon-public-key>
-```
-
-### Langkah 5: Menjalankan Server Lokal
-Untuk mode pengembangan (*hot-reload* menggunakan nodemon):
-```bash
-npm run dev
-```
-
-Atau untuk mode standar (*production mode*):
-```bash
-npm start
-```
-
-Jika berhasil, terminal akan menampilkan pesan:
-```plaintext
-Server running on port 3000
-```
-Buka browser pada `http://localhost:3000` untuk melihat status server.
-
----
-
-## 🧪 9. Panduan Pengujian dengan Postman
-
-Proyek ini telah dilengkapi dengan berkas Postman siap pakai:
-* **Koleksi Request:** [`PPB_API_Postman_Collection.json`](PPB_API_Postman_Collection.json)
-* **Environment:** [`PPB_API_Postman_Environment.json`](PPB_API_Postman_Environment.json)
-
-### Langkah Import ke Postman:
-1. Buka aplikasi **Postman**.
-2. Klik tombol **Import** di sudut kiri atas.
-3. Seret (*drag & drop*) kedua file tersebut ke Postman.
-4. Pilih environment **PPB Modul 1 - Local & Vercel Environment**.
-5. Nilai variabel `base_url` secara bawaan adalah `http://localhost:3000`. Jika ingin menguji API yang telah di-deploy ke Vercel, cukup ubah nilai `base_url` di environment Postman menjadi URL Vercel Anda.
-6. Anda dapat langsung menjalankan seluruh skenario pengujian CRUD peminjaman, filter `?status=Terlambat`, buku, dan anggota!
-
----
-
-## 🌐 10. Panduan Deployment ke Vercel
-
-Proyek ini sudah dikonfigurasi dengan file [`vercel.json`](vercel.json) sehingga dapat langsung di-deploy:
-
-1. **Unggah Proyek ke GitHub:**
-   Inisialisasi git dan push kode ke repositori GitHub Anda:
+### Langkah Instalasi
+1. Clone repository:
    ```bash
-   git init
-   git add .
-   git commit -m "feat: setup library loan REST API responsi modul 1"
-   git branch -M main
-   git remote add origin https://github.com/<username>/<repo-name>.git
-   git push -u origin main
+   git clone https://github.com/abipemula/ResponsiM1-Prak-PPB.git
+   cd ResponsiM1-Prak-PPB
    ```
-2. **Login ke Vercel:**
-   Buka [https://vercel.com/](https://vercel.com/) dan masuk menggunakan akun GitHub Anda.
-3. **Import Project:**
-   * Di dashboard Vercel, klik **Add New...** -> **Project**.
-   * Cari repositori GitHub yang baru saja dibuat, lalu klik **Import**.
-4. **Pengaturan Framework & Direktori:**
-   * Framework Preset: biarkan **Other** atau **Express**.
-   * Root Directory: biarkan `./` (default).
-5. **Konfigurasi Environment Variables:**
-   Sebelum klik deploy, buka bagian **Environment Variables** dan tambahkan dua variabel berikut:
-   * **`SUPABASE_URL`**: Masukkan Project URL Supabase Anda.
-   * **`SUPABASE_KEY`**: Masukkan anon public key Supabase Anda.
-6. **Deploy:**
-   Klik tombol **Deploy** dan tunggu proses build selesai dalam beberapa detik.
-7. **Verifikasi:**
-   Setelah selesai, klik tautan domain yang diberikan Vercel (misal: `https://<nama-project>.vercel.app`).
-   Uji akses endpoint `/` atau `/api/loans?status=Terlambat` langsung di browser maupun Postman!
+
+2. Install dependensi:
+   ```bash
+   npm install
+   ```
+
+3. Setup database Supabase:
+   - Masuk ke dashboard Supabase, buat project baru.
+   - Buka menu **SQL Editor**, buka file [`supabase_schema.sql`](supabase_schema.sql), lalu paste isinya dan klik **Run**.
+   - Skema tabel `members`, `books`, `loans` beserta seed data awal akan otomatis dibuat.
+
+4. Konfigurasi Environment:
+   - Salin file `.env.example` menjadi `.env`:
+     ```bash
+     cp .env.example .env
+     ```
+   - Isi kredensial dari menu **Project Settings -> Data API** di Supabase:
+     ```env
+     PORT=3000
+     SUPABASE_URL=https://<project-id>.supabase.co
+     SUPABASE_KEY=<anon-public-key>
+     ```
+
+5. Jalankan server:
+   - Mode development (dengan reload otomatis):
+     ```bash
+     npm run dev
+     ```
+   - Mode production:
+     ```bash
+     npm start
+     ```
+   Akses API di `http://localhost:3000`.
 
 ---
 
-## 👨‍💻 Kontributor
-* **Nama Praktikan:** Mahasiswa Praktikum PPB
-* **Mata Kuliah:** Praktikum Pemrograman Berbasis Platform (PPB)
-* **Modul:** Modul 1 - Application Programming Interface (API)
+## 7. Pengujian dengan Postman
+
+Tersedia berkas koleksi dan environment Postman di dalam repository:
+- Koleksi: [`PPB_API_Postman_Collection.json`](PPB_API_Postman_Collection.json)
+- Environment: [`PPB_API_Postman_Environment.json`](PPB_API_Postman_Environment.json)
+
+Tinggal import kedua berkas tersebut ke Postman untuk langsung mencoba semua endpoint baik di server lokal (`localhost:3000`) maupun di Vercel setelah di-deploy.
+
+---
+
+## 8. Panduan Deployment ke Vercel
+
+1. Buka [vercel.com](https://vercel.com/) dan login menggunakan akun GitHub.
+2. Klik **Add New...** -> **Project**, lalu pilih repository `abipemula/ResponsiM1-Prak-PPB`.
+3. Pada bagian **Environment Variables**, tambahkan:
+   - `SUPABASE_URL` = `<URL Supabase Anda>`
+   - `SUPABASE_KEY` = `<Anon Key Supabase Anda>`
+4. Klik **Deploy** dan tunggu proses build selesai.
+5. Uji endpoint pada domain yang diberikan oleh Vercel.
