@@ -1,0 +1,337 @@
+{
+  "info": {
+    "_postman_id": "c1f7b8a2-7e9b-4321-9876-123456789abc",
+    "name": "PPB Modul 1 - Responsi Library Loan API",
+    "description": "Postman Collection untuk Pengujian REST API Layanan Pencatatan Peminjaman Buku Perpustakaan dengan Supabase & Express",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:3000",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "General",
+      "item": [
+        {
+          "name": "API Welcome & Status",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/",
+              "host": ["{{base_url}}"],
+              "path": [""]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Loans (Peminjaman)",
+      "item": [
+        {
+          "name": "Get All Loans",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/loans",
+              "host": ["{{base_url}}"],
+              "path": ["api", "loans"]
+            }
+          }
+        },
+        {
+          "name": "Filter Loans (Status = Terlambat)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/loans?status=Terlambat",
+              "host": ["{{base_url}}"],
+              "path": ["api", "loans"],
+              "query": [
+                {
+                  "key": "status",
+                  "value": "Terlambat"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Filter Loans (Status = Dipinjam)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/loans?status=Dipinjam",
+              "host": ["{{base_url}}"],
+              "path": ["api", "loans"],
+              "query": [
+                {
+                  "key": "status",
+                  "value": "Dipinjam"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Filter Loans (Status = Dikembalikan)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/loans?status=Dikembalikan",
+              "host": ["{{base_url}}"],
+              "path": ["api", "loans"],
+              "query": [
+                {
+                  "key": "status",
+                  "value": "Dikembalikan"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Loan by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/loans/c0000001-0000-0000-0000-000000000003",
+              "host": ["{{base_url}}"],
+              "path": ["api", "loans", "c0000001-0000-0000-0000-000000000003"]
+            }
+          }
+        },
+        {
+          "name": "Create Loan (Pinjam Buku)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"member_id\": \"a0000001-0000-0000-0000-000000000001\",\n  \"book_id\": \"b0000001-0000-0000-0000-000000000004\",\n  \"loan_date\": \"2026-03-15\",\n  \"due_date\": \"2026-03-22\",\n  \"status\": \"Dipinjam\",\n  \"notes\": \"Peminjaman buku Filosofi Teras untuk tugas kuliah\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/loans",
+              "host": ["{{base_url}}"],
+              "path": ["api", "loans"]
+            }
+          }
+        },
+        {
+          "name": "Update Loan (Pengembalian Buku)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"Dikembalikan\",\n  \"return_date\": \"2026-03-20\",\n  \"notes\": \"Buku dikembalikan tepat waktu, kondisi mulus\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/loans/c0000001-0000-0000-0000-000000000002",
+              "host": ["{{base_url}}"],
+              "path": ["api", "loans", "c0000001-0000-0000-0000-000000000002"]
+            }
+          }
+        },
+        {
+          "name": "Delete Loan",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/loans/c0000001-0000-0000-0000-000000000001",
+              "host": ["{{base_url}}"],
+              "path": ["api", "loans", "c0000001-0000-0000-0000-000000000001"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Books (Buku)",
+      "item": [
+        {
+          "name": "Get All Books",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/books",
+              "host": ["{{base_url}}"],
+              "path": ["api", "books"]
+            }
+          }
+        },
+        {
+          "name": "Get Book by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/books/b0000001-0000-0000-0000-000000000001",
+              "host": ["{{base_url}}"],
+              "path": ["api", "books", "b0000001-0000-0000-0000-000000000001"]
+            }
+          }
+        },
+        {
+          "name": "Create Book",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"isbn\": \"978-623-00-1234-8\",\n  \"title\": \"Struktur Data & Algoritma dengan JavaScript\",\n  \"author\": \"Rian Kurniawan\",\n  \"publisher\": \"Elex Media Komputindo\",\n  \"year\": 2024,\n  \"stock\": 8\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/books",
+              "host": ["{{base_url}}"],
+              "path": ["api", "books"]
+            }
+          }
+        },
+        {
+          "name": "Update Book",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"stock\": 10,\n  \"publisher\": \"Elex Media Komputindo (Revisi)\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/books/b0000001-0000-0000-0000-000000000001",
+              "host": ["{{base_url}}"],
+              "path": ["api", "books", "b0000001-0000-0000-0000-000000000001"]
+            }
+          }
+        },
+        {
+          "name": "Delete Book",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/books/b0000001-0000-0000-0000-000000000004",
+              "host": ["{{base_url}}"],
+              "path": ["api", "books", "b0000001-0000-0000-0000-000000000004"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Members (Anggota)",
+      "item": [
+        {
+          "name": "Get All Members",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/members",
+              "host": ["{{base_url}}"],
+              "path": ["api", "members"]
+            }
+          }
+        },
+        {
+          "name": "Get Member by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/members/a0000001-0000-0000-0000-000000000001",
+              "host": ["{{base_url}}"],
+              "path": ["api", "members", "a0000001-0000-0000-0000-000000000001"]
+            }
+          }
+        },
+        {
+          "name": "Create Member",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"member_code\": \"MBR-004\",\n  \"name\": \"Fajar Nugraha\",\n  \"email\": \"fajar.nugraha@example.com\",\n  \"phone\": \"089876543210\",\n  \"address\": \"Jl. Solo KM 9, Sleman\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/members",
+              "host": ["{{base_url}}"],
+              "path": ["api", "members"]
+            }
+          }
+        },
+        {
+          "name": "Update Member",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"phone\": \"081299887766\",\n  \"address\": \"Jl. Kaliurang KM 8, Sleman\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/members/a0000001-0000-0000-0000-000000000001",
+              "host": ["{{base_url}}"],
+              "path": ["api", "members", "a0000001-0000-0000-0000-000000000001"]
+            }
+          }
+        },
+        {
+          "name": "Delete Member",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/members/a0000001-0000-0000-0000-000000000003",
+              "host": ["{{base_url}}"],
+              "path": ["api", "members", "a0000001-0000-0000-0000-000000000003"]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}
