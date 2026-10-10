@@ -1,11 +1,6 @@
 import { supabase } from "../config/supabaseClient.js";
 
 export const LoanModel = {
-  /**
-   * Mengambil semua data peminjaman dengan relasi anggota dan buku.
-   * Mendukung filter query seperti status, member_id, dan book_id.
-   * Contoh: status = "Terlambat", "Dipinjam", "Dikembalikan"
-   */
   async getAll(filters = {}) {
     let query = supabase.from("loans").select(`
       id,
@@ -41,9 +36,6 @@ export const LoanModel = {
     return data;
   },
 
-  /**
-   * Mengambil detail satu peminjaman berdasarkan ID
-   */
   async getById(id) {
     const { data, error } = await supabase
       .from("loans")
@@ -68,9 +60,6 @@ export const LoanModel = {
     return data;
   },
 
-  /**
-   * Membuat data peminjaman buku baru
-   */
   async create(payload) {
     const loanPayload = {
       ...payload,
@@ -101,9 +90,6 @@ export const LoanModel = {
     return data;
   },
 
-  /**
-   * Memperbarui data peminjaman buku berdasarkan ID (misal: pengembalian / status)
-   */
   async update(id, payload) {
     const { data, error } = await supabase
       .from("loans")
@@ -129,9 +115,6 @@ export const LoanModel = {
     return data;
   },
 
-  /**
-   * Menghapus catatan peminjaman buku berdasarkan ID
-   */
   async remove(id) {
     const { error } = await supabase.from("loans").delete().eq("id", id);
     if (error) throw error;

@@ -1,10 +1,6 @@
 import { LoanModel } from "../models/loanModel.js";
 
 export const LoanController = {
-  /**
-   * GET /loans atau GET /api/loans
-   * Mendukung query filter: ?status=Terlambat / ?status=Dipinjam / ?status=Dikembalikan
-   */
   async getAll(req, res) {
     try {
       const { status, member_id, book_id } = req.query;
@@ -15,9 +11,6 @@ export const LoanController = {
     }
   },
 
-  /**
-   * GET /loans/:id atau GET /api/loans/:id
-   */
   async getById(req, res) {
     try {
       const { id } = req.params;
@@ -28,9 +21,6 @@ export const LoanController = {
     }
   },
 
-  /**
-   * POST /loans atau POST /api/loans
-   */
   async create(req, res) {
     try {
       const { member_id, book_id, due_date } = req.body;
@@ -47,9 +37,6 @@ export const LoanController = {
     }
   },
 
-  /**
-   * PUT /loans/:id atau PUT /api/loans/:id
-   */
   async update(req, res) {
     try {
       const { id } = req.params;
@@ -60,9 +47,6 @@ export const LoanController = {
     }
   },
 
-  /**
-   * DELETE /loans/:id atau DELETE /api/loans/:id
-   */
   async remove(req, res) {
     try {
       const { id } = req.params;
